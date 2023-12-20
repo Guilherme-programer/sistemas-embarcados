@@ -1,0 +1,103 @@
+#include <Wire.h> 
+#include <ESP32Servo.h>
+#include "pitches.h"
+#define BUZZZER_PIN  18
+#define LIGHT_SENSOR_PIN 36 
+#define echoPin 2       
+#define trigPin 4  
+int graus = 52;
+long duration, distance;
+
+Servo myServo;
+int servopin = 14;
+
+int melody[] = {
+  NOTE_C4, NOTE_G3, NOTE_G3, NOTE_A3, NOTE_G3, 0, NOTE_B3, NOTE_C4
+};
+
+int noteDurations[] = {
+  4, 8, 8, 4, 4, 4, 4, 4
+};
+
+void setup() {
+  // initialize serial communication at 9600 bits per second:
+  Serial.begin(9600);
+  myServo.attach(servopin);
+  pinMode(trigPin, OUTPUT);
+  pinMode(echoPin, INPUT);
+  pinMode(26, OUTPUT);
+  pinMode(25, OUTPUT);
+  
+}
+
+
+void loop() {
+  // reads the input on analog pin (value between 0 and 4095)
+  int analogValue = analogRead(LIGHT_SENSOR_PIN);
+  
+  digitalWrite(trigPin, LOW);
+  delayMicroseconds(2);
+  digitalWrite(trigPin, HIGH);
+  delayMicroseconds(10);
+  digitalWrite(trigPin, LOW);
+  
+  duration = pulseIn(echoPin, HIGH);
+  distance = duration / 58.2;
+  String disp = String(distance);
+
+  Serial.print("Distance: ");
+  Serial.print(disp);
+  Serial.println(" cm");
+  
+  
+
+
+  Serial.print("Analog Value = ");
+  Serial.print(analogValue);   // the raw analog reading
+
+  // We'll have a few threshholds, qualitatively determined
+  if(distance > 12){
+    digitalWrite(26, HIGH);
+    digitalWrite(25, LOW);
+  if (analogValue > 450) {
+    if(graus == 150){  
+      
+    }
+    else if(graus == 52){
+      for(int i=52; i<150;i++){
+        graus = 150;
+        myServo.write(i);
+        delay(50);
+      }
+    }  
+  }
+  else if (analogValue <= 450) {
+    if (graus == 150 ){
+      for(int i=150; i>52;i--){
+          graus = 52;
+          myServo.write(i);
+          delay(50);
+      }
+    }
+    else if(graus == 52){
+
+    }
+  }
+    
+
+  delay(500);
+  }
+  else{
+    digitalWrite(25, HIGH);
+    digitalWrite(26, LOW);
+    for (int thisNote = 0; thisNote < 8; thisNote++) {
+    int noteDuration = 1000 / noteDurations[thisNote];
+    tone(BUZZZER_PIN, melody[thisNote], noteDuration);
+
+    int pauseBetweenNotes = noteDuration * 1.30;
+    delay(pauseBetweenNotes);
+    noTone(BUZZZER_PIN);
+  }
+
+  }
+}
